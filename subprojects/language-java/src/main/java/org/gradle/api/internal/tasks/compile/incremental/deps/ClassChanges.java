@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package org.gradle.caching.internal.packaging;
+package org.gradle.api.internal.tasks.compile.incremental.deps;
 
-import org.gradle.api.GradleException;
+import java.util.Set;
 
-/**
- * Thrown after unpacking failed, when the attempt to clean up unpacked outputs also failed.
- */
-public class UnrecoverableUnpackingException extends GradleException {
-    public UnrecoverableUnpackingException(String message) {
-        super(message);
+public class ClassChanges {
+
+    private final Set<String> modified;
+    private final Set<String> addedClasses;
+
+    public ClassChanges(Set<String> modified, Set<String> addedClasses) {
+        this.modified = modified;
+        this.addedClasses = addedClasses;
     }
 
-    public UnrecoverableUnpackingException(String message, Throwable cause) {
-        super(message, cause);
+    public Set<String> getModified() {
+        return modified;
+    }
+
+    public Set<String> getAdded() {
+        return addedClasses;
     }
 }

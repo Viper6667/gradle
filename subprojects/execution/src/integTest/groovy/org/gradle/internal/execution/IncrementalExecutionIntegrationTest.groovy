@@ -124,15 +124,15 @@ class IncrementalExecutionIntegrationTest extends Specification {
 
     WorkExecutor<IncrementalContext, UpToDateResult> getExecutor() {
         new DefaultWorkExecutor<>(
-            new ResolveChangesStep<UpToDateResult>(changeDetector,
-                new SkipUpToDateStep<IncrementalChangesContext>(
-                    new RecordOutputsStep<IncrementalChangesContext>(outputFilesRepository,
-                        new StoreSnapshotsStep<IncrementalChangesContext>(
-                            new SnapshotOutputsStep<IncrementalChangesContext>(buildInvocationScopeId.getId(),
-                                new CreateOutputsStep<IncrementalChangesContext, Result>(
-                                    new CatchExceptionStep<IncrementalChangesContext>(
-                                        new BroadcastChangingOutputsStep<IncrementalChangesContext>(outputChangeListener,
-                                            new ExecuteStep<IncrementalChangesContext>()
+            new ResolveChangesStep<>(changeDetector,
+                new SkipUpToDateStep<>(
+                    new RecordOutputsStep<>(outputFilesRepository,
+                        new BroadcastChangingOutputsStep<>(outputChangeListener,
+                            new StoreSnapshotsStep<>(
+                                new SnapshotOutputsStep<>(buildInvocationScopeId.getId(),
+                                    new CreateOutputsStep<>(
+                                        new CatchExceptionStep<>(
+                                                new ExecuteStep<>()
                                         )
                                     )
                                 )
@@ -800,11 +800,9 @@ class IncrementalExecutionIntegrationTest extends Specification {
                 }
 
                 @Override
-                void visitFileInputs(UnitOfWork.InputFilePropertyVisitor visitor) {
+                void visitInputFileProperties(UnitOfWork.InputFilePropertyVisitor visitor) {
                     for (entry in inputs.entrySet()) {
-                        if (entry.value != null) {
-                            visitor.visitInputFileProperty(entry.key, entry.value)
-                        }
+                        visitor.visitInputFileProperty(entry.key, entry.value, false)
                     }
                 }
 
@@ -826,12 +824,7 @@ class IncrementalExecutionIntegrationTest extends Specification {
                 }
 
                 @Override
-                void visitLocalState(CacheableEntity.LocalStateVisitor visitor) {
-                    throw new UnsupportedOperationException()
-                }
-
-                @Override
-                void outputsRemovedAfterFailureToLoadFromCache() {
+                void visitLocalState(UnitOfWork.LocalStateVisitor visitor) {
                     throw new UnsupportedOperationException()
                 }
 
@@ -887,6 +880,11 @@ class IncrementalExecutionIntegrationTest extends Specification {
 
                 @Override
                 boolean isRequiresInputChanges() {
+                    return false
+                }
+
+                @Override
+                boolean isRequiresLegacyInputChanges() {
                     return false
                 }
 

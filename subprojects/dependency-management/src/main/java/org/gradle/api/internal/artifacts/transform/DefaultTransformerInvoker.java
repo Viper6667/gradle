@@ -325,8 +325,8 @@ public class DefaultTransformerInvoker implements TransformerInvoker {
         }
 
         @Override
-        public void visitFileInputs(InputFilePropertyVisitor visitor) {
-            visitor.visitInputFileProperty(INPUT_ARTIFACT_PROPERTY_NAME, inputArtifact);
+        public void visitInputFileProperties(InputFilePropertyVisitor visitor) {
+            visitor.visitInputFileProperty(INPUT_ARTIFACT_PROPERTY_NAME, inputArtifact, true);
         }
 
         @Override
@@ -350,10 +350,6 @@ public class DefaultTransformerInvoker implements TransformerInvoker {
         }
 
         @Override
-        public void outputsRemovedAfterFailureToLoadFromCache() {
-        }
-
-        @Override
         public CacheHandler createCacheHandler() {
             Hasher hasher = Hashing.newHasher();
             for (Map.Entry<String, ValueSnapshot> entry : beforeExecutionState.getInputProperties().entrySet()) {
@@ -367,11 +363,11 @@ public class DefaultTransformerInvoker implements TransformerInvoker {
             TransformerExecutionBuildCacheKey cacheKey = new TransformerExecutionBuildCacheKey(hasher.hash());
             return new CacheHandler() {
                 @Override
-                public <T> Optional<T> load(Function<BuildCacheKey, T> loader) {
+                public <T> Optional<T> load(Function<BuildCacheKey, Optional<T>> loader) {
                     if (!transformer.isCacheable()) {
                         return Optional.empty();
                     }
-                    return Optional.ofNullable(loader.apply(cacheKey));
+                    return loader.apply(cacheKey);
                 }
 
                 @Override
@@ -397,6 +393,11 @@ public class DefaultTransformerInvoker implements TransformerInvoker {
         @Override
         public boolean isRequiresInputChanges() {
             return transformer.requiresInputChanges();
+        }
+
+        @Override
+        public boolean isRequiresLegacyInputChanges() {
+            return false;
         }
 
         @Override

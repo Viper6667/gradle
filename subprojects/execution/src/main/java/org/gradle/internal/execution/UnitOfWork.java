@@ -25,6 +25,7 @@ import org.gradle.internal.file.TreeType;
 import org.gradle.internal.fingerprint.CurrentFileCollectionFingerprint;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -39,16 +40,20 @@ public interface UnitOfWork extends CacheableEntity {
 
     boolean isRequiresInputChanges();
 
-    void visitFileInputs(InputFilePropertyVisitor visitor);
+    boolean isRequiresLegacyInputChanges();
+
+    void visitInputFileProperties(InputFilePropertyVisitor visitor);
 
     void visitOutputProperties(OutputPropertyVisitor visitor);
 
-    long markExecutionTime();
+    void visitLocalState(LocalStateVisitor visitor);
 
-    /**
-     * Loading from cache failed and all outputs were removed.
-     */
-    void outputsRemovedAfterFailureToLoadFromCache();
+    @FunctionalInterface
+    interface LocalStateVisitor {
+        void visitLocalStateRoot(File localStateRoot);
+    }
+
+    long markExecutionTime();
 
     CacheHandler createCacheHandler();
 
@@ -71,7 +76,7 @@ public interface UnitOfWork extends CacheableEntity {
 
     @FunctionalInterface
     interface InputFilePropertyVisitor {
-        void visitInputFileProperty(String name, Object value);
+        void visitInputFileProperty(String name, @Nullable Object value, boolean incremental);
     }
 
     @FunctionalInterface

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,18 @@
  * limitations under the License.
  */
 
-package org.gradle.api.internal.tasks.compile.incremental.deps;
+package org.gradle.integtests.tooling.fixture
 
-import java.util.Set;
+import org.gradle.integtests.fixtures.executer.GradleDistribution
 
-public class AffectedClasses {
 
-    private final DependentsSet altered;
-    private final Set<String> addedClasses;
+/**
+ * Provides TAPI client additional classpath.
+ */
+interface ToolingApiAdditionalClasspathProvider {
 
-    public AffectedClasses(DependentsSet altered, Set<String> addedClasses) {
-        this.altered = altered;
-        this.addedClasses = addedClasses;
-    }
-
-    public DependentsSet getAltered() {
-        return altered;
-    }
-
-    public Set<String> getAdded() {
-        return addedClasses;
-    }
+    /**
+     * Additional classpath for given target Gradle distribution to be added to the loader of the test class.
+     */
+    List<File> additionalClasspathFor(GradleDistribution distribution)
 }
