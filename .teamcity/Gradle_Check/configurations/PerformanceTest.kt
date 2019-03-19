@@ -26,6 +26,11 @@ class PerformanceTest(model: CIBuildModel, type: PerformanceTestType, stage: Sta
         }
     }
 
+    requirements {
+        // We observed some relocatability issues with its inputs and it is a long running job
+        doesNotContain("teamcity.agent.name", "ec2")
+    }
+
     params {
         param("performance.baselines", type.defaultBaselines)
         param("env.GRADLE_OPTS", "-Xmx1536m -XX:MaxPermSize=384m")
@@ -38,7 +43,7 @@ class PerformanceTest(model: CIBuildModel, type: PerformanceTestType, stage: Sta
 
     val tasks = "distributed${type.taskId}s"
     val runnerParameters = (
-        listOf("-x prepareSamples --baselines %performance.baselines% ${type.extraParameters} -PtimestampedVersion -Porg.gradle.performance.branchName=%teamcity.build.branch% -Porg.gradle.performance.db.url=%performance.db.url% -Porg.gradle.performance.db.username=%performance.db.username% -Porg.gradle.performance.buildTypeId=${IndividualPerformanceScenarioWorkers(model).id} -Porg.gradle.performance.workerTestTaskName=fullPerformanceTest -Porg.gradle.performance.coordinatorBuildId=%teamcity.build.id% -Porg.gradle.performance.db.password=%performance.db.password.tcagent%") +
+        listOf("-x prepareSamples --baselines %performance.baselines% ${type.extraParameters} -Porg.gradle.performance.branchName=%teamcity.build.branch% -Porg.gradle.performance.db.url=%performance.db.url% -Porg.gradle.performance.db.username=%performance.db.username% -Porg.gradle.performance.buildTypeId=${IndividualPerformanceScenarioWorkers(model).id} -Porg.gradle.performance.workerTestTaskName=fullPerformanceTest -Porg.gradle.performance.coordinatorBuildId=%teamcity.build.id% -Porg.gradle.performance.db.password=%performance.db.password.tcagent%") +
             buildScanTag("PerformanceTest") + "-PtestJavaHome=${coordinatorPerformanceTestJavaHome}")
         .joinToString(" ")
 

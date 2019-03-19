@@ -49,6 +49,7 @@ import org.openmbee.junit.model.JUnitTestSuite
 
 import javax.inject.Inject
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 import java.util.zip.ZipInputStream
 
 /**
@@ -136,17 +137,27 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
             throw e
         } finally {
             writeBinaryResults()
-            generatePerformanceReport()
+            if(isSuccessfulFirstRun() || isRerun()) {
+                generatePerformanceReport()
+            }
             testEventsGenerator.release()
         }
     }
 
+    private boolean isSuccessfulFirstRun() {
+        return !isRerun() && finishedBuilds.values().every { it.successful }
+    }
+
+    private boolean isRerun() {
+        return project.findProperty('onlyPreviousFailedTestClasses') as boolean
+    }
+
     @VisibleForTesting
     void writeBinaryResults() {
-        long counter = 0
+        AtomicLong counter = new AtomicLong()
         Map<String, List<ScenarioResult>> classNameToScenarioNames = finishedBuilds.values().groupBy { it.testClassFullName }
         List<TestClassResult> classResults = classNameToScenarioNames.entrySet().collect { Map.Entry<String, List<ScenarioResult>> entry ->
-            TestClassResult classResult = new TestClassResult(++counter, entry.key, 0L)
+            TestClassResult classResult = new TestClassResult(counter.incrementAndGet(), entry.key, 0L)
             entry.value.each { ScenarioResult scenarioResult ->
                 classResult.add(scenarioResult.toMethodResult(counter))
             }
@@ -470,12 +481,16 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
             return testSuite.name
         }
 
-        TestMethodResult toMethodResult(long counter) {
+        boolean isSuccessful() {
+            return buildResult.status == 'SUCCESS'
+        }
+
+        TestMethodResult toMethodResult(AtomicLong counter) {
             return new TestMethodResult(
-                ++counter,
+                counter.incrementAndGet(),
                 name,
                 name,
-                buildResult.status == 'SUCCESS' ? TestResult.ResultType.SUCCESS : TestResult.ResultType.FAILURE,
+                isSuccessful() ? TestResult.ResultType.SUCCESS : TestResult.ResultType.FAILURE,
                 0L,
                 0L)
         }
